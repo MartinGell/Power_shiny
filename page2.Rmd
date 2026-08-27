@@ -1,0 +1,94 @@
+# Introduction
+
+Some intro text
+
+```{r setup, include=FALSE}
+# Force the script to load directly into knitr's rendering environment
+sys.source("functions/analytic_power.R", envir = environment())
+
+sys.source("beta_from_r.R", envir = environment())
+sys.source("simulate_disaggregated_power.R", envir = environment())
+sys.source("analytic_power.R", envir = environment())
+```
+
+# Set up arguments - make sure these are possible to change by the user
+# but start with values already. Here we need to do the beta from r also.
+# start with:
+# Edge #56
+example_edge_within_var  <- 0.014
+example_edge_between_var <- 0.056
+# ICC = 0.056 / 0.07 = 0.8
+
+# Total cognition
+example_beh_within_var  <- 57
+example_beh_between_var <- 205 
+# ICC = 205 / 262 = 0.78
+
+# Actual prep code:
+``` {}
+```
+
+# Sweep over subjects and sessions
+# again, let the user change the arguments, but start with:
+# sample_sizes   <- seq(25, 200, by = 25)
+# session_counts <- c(2, 4, 6, 8, 10)
+
+# Actual sweep
+``` {}
+param_grid <- expand.grid(n_subjects   = sample_sizes,
+                           n_timepoints = session_counts)
+
+results_list <- lapply(seq_len(nrow(param_grid)), function(i) {
+  n <- param_grid$n_subjects[i]
+  t <- param_grid$n_timepoints[i]
+
+  res <- analytic_power(r_within = 0.11, r_between = 0.11, r_scale = "latent",
+                         icc_x = example_edge_between_var / (example_edge_between_var + example_edge_within_var),
+                         icc_y = example_beh_between_var / (example_beh_between_var + example_beh_within_var),
+                         n_subjects = n,
+                         n_timepoints = t,
+                         within_reliability = 1,
+                         y_occasion_reliability = 1)
+
+  tibble(n_subjects   = n,
+         n_timepoints = t,
+         power_within  = res$power_within,
+         power_between = res$power_between)
+})
+
+power_df <- bind_rows(results_list) %>%
+  mutate(n_timepoints = factor(n_timepoints, levels = session_counts))
+
+# Long format so within/between can be faceted
+power_long <- power_df %>%
+  pivot_longer(cols = c(power_within, power_between),
+               names_to = "power_type",
+               values_to = "power") %>%
+  mutate(power_type = recode(power_type,
+                              power_within  = "Within-person Power",
+                              power_between = "Between-person Power"))
+
+# Within-person power plot
+p_within <- ggplot(power_df, aes(x = n_subjects, y = power_within, color = n_timepoints)) +
+  geom_line(linewidth = 1.1) +
+  geom_hline(yintercept = 0.8, linetype = "dashed", color = "gray40") +
+  labs(x = "Number of Subjects",
+       y = "Estimated Power",
+       title = "Within-Person Power by Sample Size and Number of Sessions",
+       color = "Sessions") +
+  ylim(0,1.0) +
+  scale_color_viridis_d() +
+  theme_classic()
+
+# Between-person power plot
+p_between <- ggplot(power_df, aes(x = n_subjects, y = power_between, color = n_timepoints)) +
+  geom_line(linewidth = 1.1) +
+  geom_hline(yintercept = 0.8, linetype = "dashed", color = "gray40") +
+  labs(x = "Number of Subjects",
+       y = "Estimated Power",
+       title = "Between-Person Power by Sample Size and Number of Sessions",
+       color = "Sessions") +
+  scale_color_viridis_d() +
+  theme_classic()
+```
+

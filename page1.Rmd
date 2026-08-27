@@ -1,0 +1,38 @@
+# Introduction
+
+Some intro text
+
+```{r setup, include=FALSE}
+# Force the script to load directly into knitr's rendering environment
+sys.source("functions/analytic_power.R", envir = environment())
+
+sys.source("beta_from_r.R", envir = environment())
+sys.source("simulate_disaggregated_power.R", envir = environment())
+sys.source("analytic_power.R", envir = environment())
+```
+
+# Set up arguments - make sure these are possible to change by the user
+# but start with values already. Here we need to do the beta from r also.
+# start with:
+# Edge #56
+example_edge_within_var  <- 0.014
+example_edge_between_var <- 0.056
+# ICC = 0.056 / 0.07 = 0.8
+
+# Total cognition
+example_beh_within_var  <- 57
+example_beh_between_var <- 205 
+# ICC = 205 / 262 = 0.78
+
+# Actual prep code:
+``` {}
+```
+
+# Sweep over subjects and sessions
+# again, let the user change the arguments, but start with:
+# sample_sizes   <- seq(25, 200, by = 25)
+# session_counts <- c(2, 4, 6, 8, 10)
+
+# Actual sweep
+``` {}
+```
